@@ -1,5 +1,5 @@
 (function () {
-  const css = ["/css/base.css", "/css/fonts.css"];
+  const css = ["css/base.css", "css/fonts.css"];
 
   css.forEach(function (file) {
     const link = document.createElement("link");
