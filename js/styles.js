@@ -9,31 +9,133 @@
   });
 })();
 
-(function () {
-  const cursor = document.getElementById("cursor");
-  if (!cursor) return;
+(function() {
+  "use strict";
 
-  let mouseX = window.innerWidth / 2;
-  let mouseY = window.innerHeight / 2;
-  let posX = mouseX;
-  let posY = mouseY;
+  function initAnimation() {
+    var header = document.getElementsByTagName("header")[0];
+    var main = document.getElementsByTagName("main")[0];
 
-  const speed = 0.1;
+    if (!header || !main) return;
 
-  window.addEventListener("mousemove", function (e) {
-    mouseX = e.clientX;
-    mouseY = e.clientY;
-  });
+    header.style.transform = "translateY(-150%)";
+    main.style.opacity = "0";
 
-  function animate() {
-    posX += (mouseX - posX) * speed;
-    posY += (mouseY - posY) * speed;
+    var headerY = -150;
+    var velocity = 0;
+    var targetY = 0;
+    var stiffness = 0.025;
+    var damping = 0.5;
 
-    cursor.style.transform =
-      "translate(" + posX + "px," + posY + "px) translate(-50%, -50%)";
+    var mainOpacity = 0;
+    var speedMain = 0.025;
 
-    requestAnimationFrame(animate);
+    function animate() {
+      var needNextFrame = false;
+
+      var force = (targetY - headerY) * stiffness;
+      velocity += force;
+      velocity *= damping;
+      headerY += velocity;
+      header.style.transform = "translateY(" + headerY + "%)";
+
+      if (Math.abs(headerY - targetY) > 0.1 || Math.abs(velocity) > 0.1) {
+        needNextFrame = true;
+      }
+
+      if (Math.abs(headerY - targetY) <= 0.1 && mainOpacity < 1) {
+        mainOpacity += speedMain;
+        if (mainOpacity > 1) mainOpacity = 1;
+        main.style.opacity = mainOpacity.toString();
+        needNextFrame = true;
+      }
+
+      if (needNextFrame) requestAnimationFrame(animate);
+    }
+
+    animate();
   }
 
-  animate();
+  if (document.readyState === "complete") {
+    initAnimation();
+  } else {
+    window.addEventListener("load", initAnimation);
+  }
 })();
+
+(function () {
+  "use strict";
+
+  function initCursor() {
+    const cursor = document.getElementById("cursor");
+    if (!cursor) return;
+
+    let mouseX = window.innerWidth / 2;
+    let mouseY = window.innerHeight / 2;
+
+    let posX = mouseX + window.pageXOffset;
+    let posY = mouseY + window.pageYOffset;
+
+    const speed = 0.15;
+
+    window.addEventListener("mousemove", (e) => {
+      mouseX = e.clientX;
+      mouseY = e.clientY;
+    }, { passive: true });
+
+    function animate() {
+      const targetX = mouseX + window.pageXOffset;
+      const targetY = mouseY + window.pageYOffset;
+
+      posX += (targetX - posX) * speed;
+      posY += (targetY - posY) * speed;
+
+      cursor.style.top = posY + "px";
+      cursor.style.left = posX + "px";
+
+      requestAnimationFrame(animate);
+    }
+
+    animate();
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initCursor);
+  } else {
+    initCursor();
+  }
+})();
+
+const body__arrow = document.getElementById('body__arrow');
+
+let isVisible = false;
+
+body__arrow.animate(
+  [{ opacity: 1 }, { opacity: 0 }],
+  { duration: 0, fill: 'forwards' }
+);
+
+window.addEventListener('scroll', () => {
+  if (window.scrollY > 100 && !isVisible) {
+    isVisible = true;
+    body__arrow.animate(
+      [{ opacity: 0 }, { opacity: 1 }],
+      { duration: 250, fill: 'forwards' }
+    );
+  }
+
+  if (window.scrollY <= 100 && isVisible) {
+    isVisible = false;
+    body__arrow.animate(
+      [{ opacity: 1 }, { opacity: 0 }],
+      { duration: 250, fill: 'forwards' }
+    );
+  }
+});
+
+body__arrow.addEventListener('click', () => {
+  window.scrollTo({
+    top: 0,
+    behavior: 'smooth'
+  });
+});
